@@ -35,7 +35,6 @@ $(TARGET): $(OBJS)
 
 clean:
 	-$(RM) $(OBJS) $(TARGET)
-	#$(shell $(RM) ,$(OBJS), $(TARGET))
 
 run:
 	@echo --[RUN]--
