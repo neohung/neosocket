@@ -11,7 +11,7 @@ ifneq (,$(or $(findstring mingw, $(MACHINE)), $(findstring cygwin, $(MACHINE))))
 	RM = del
 	TARGET := $(TARGET).exe
 	RUNSCRIPT := .\$(TARGET)
-	#RM = rm
+	RM := rm
 else
 	PLATFORM = LINUX
 	LIBS =

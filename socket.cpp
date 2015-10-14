@@ -63,8 +63,30 @@ void Socket::makelisten(int listen_port, void (*new_connection_func)(Session* s)
 }
 
 void Socket::do_recv_send(int timeout_sec){
+  //
+  for(int z=0;z<sessions.size();z++){
+    Session* p = sessions[z];
+    if (p->wdata_size){
+      if (p->send_func) p->send_func(p);
+      int len;
+      #ifdef _WIN32
+         len = send(p->GetFD(), p->wdata, p->wdata_size, 0);
+      #else
+         len = send(p->GetFD(), p->wdata, p->wdata_size, MSG_NOSIGNAL);
+      #endif
+      if (len > 0){
+        p->wdata_size -= len;
+        if (p->wdata_size){
+          memmove(&p->wdata[0], &p->wdata[len], p->wdata_size);
+        }
+      }else{
+
+      }
+    }
+  }
+  //        
 	char buf[256];
-    int nbytes;
+  int nbytes;
 	fd_set read_fds;
 	FD_ZERO(&read_fds);
 	read_fds = Socket::fds;
@@ -127,7 +149,7 @@ void Socket::do_recv_send(int timeout_sec){
    					if (p->GetFD() == i){
    					  //printf("nbytes=%d,p->rdata_size=%d,\n",nbytes,p->rdata_size);
    					  if (nbytes > p->rdata_size){
-   					  	p->rdata = (char*)realloc(p->rdata, nbytes);
+              	p->rdata = (char*)realloc((p->rdata) ? p->rdata:NULL, nbytes);
    					  }
    					  p->rdata_size = nbytes;
    					  memset(p->rdata,0,p->rdata_size);
@@ -150,7 +172,7 @@ void Socket::do_recv_send(int timeout_sec){
                 close(i); // bye!
                 FD_CLR(i, &(Socket::fds));
                 //remove Session
-                for(int z;z<sessions.size();z++){
+                for(int z=0;z<sessions.size();z++){
    					Session* p = sessions[z];
    					if (p->GetFD() == i){
    						sessions.erase(sessions.begin()+z);
@@ -164,4 +186,70 @@ void Socket::do_recv_send(int timeout_sec){
         
       }
 	}
+}
+
+void Socket::do_parse_package(void)
+{
+  for(int z=0;z<Socket::sessions.size();z++){
+    Session* p = Socket::sessions[z];
+    if (p->parse_func && p->rdata_size) {
+      p->parse_func(p);
+    }
+  }
+}
+
+
+
+//template<unsigned short id, unsigned short size>
+//void Socket::send_fpacket(Session *s, const Packet_Fixed<id>& fixed)
+//{
+    //Buffer pkt = create_fpacket<id, size>(fixed);
+    //send_buffer(s, pkt);
+//}
+
+
+unsigned short Session::peek_package_id(void){
+  assert(rdata_size >= 2);
+  unsigned short package_id = 0;
+  package_id = rdata[0] + (rdata[1] << 8);
+  return package_id;
+}
+
+bool Session::send_wdata(const char* data, int len)
+{
+    if (wdata_size + len > max_wdata)
+    {
+        max_wdata = wdata_size + len;
+        wdata = (char*)realloc((wdata) ? wdata:NULL, max_wdata);
+        //realloc_fifo(s, s->max_rdata, s->max_wdata << 1);
+        printf("socket: %d wdata expanded to %d bytes.\n", socketfd, max_wdata);
+    }
+    
+    wdata_size += len;
+    //先計算出矩陣的起始位置當作end, 減去要填入的資料長度當作start
+    char *end = reinterpret_cast<char *>(&wdata[wdata_size + 0]);
+    char *start = end - len;
+    //copy(資料起始位置, 資料結束位置, start)
+    std::copy(data, data + len, start);
+
+}
+
+void Session::wdata_dump(void)
+{
+   printf(
+          "---- 00-01-02-03-04-05-06-07  08-09-0A-0B-0C-0D-0E-0F\n");
+    for (int i = 0; i < wdata_size; i++)
+    {
+      if ((i & 15) == 0)
+            printf("%04X ", i);
+      if ((i - 8) % 16 == 0)  // -8 + 1
+            printf(" ");  
+      printf("%02X ", (unsigned char) wdata[i]);
+      if ((i+1)% 16 == 0){
+        printf("|\n");
+      }
+    }
+    printf("\n");
+    printf(
+          "---- -----------------------  ------------------------\n");
 }

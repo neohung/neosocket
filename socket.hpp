@@ -13,6 +13,10 @@
 
 #include <unistd.h> // close()
 #include <vector> 
+#include <assert.h>
+
+#include "Packet_Fixed.hpp"
+
 namespace NEO
 {
   class Session{
@@ -21,18 +25,28 @@ namespace NEO
   	  int rdata_size;
   	  char* rdata;
   	  int wdata_size;
+      int max_wdata;
   	  char* wdata;
   	  int connected;
   	  void (*recv_func)(Session* s);
   	  void (*send_func)(Session* s);
   	  void (*parse_func)(Session* s);
-  	  Session(){recv_func = NULL;rdata_size=0;};
+  	  Session(){wdata = NULL;rdata = NULL ;recv_func = NULL;rdata_size=0;parse_func=NULL;send_func=NULL;wdata_size = 0;max_wdata=0;};
   	  int GetFD(){return socketfd;};
   	  //Singleton
   	  //Session& GetInstance(){ static Session instance;return instance;};
   	  void SetRecvFunc(void (*recv_callback)(Session* s)){
   	  	recv_func = recv_callback;
   	  }
+      void SetSendFunc(void (*send_callback)(Session* s)){
+        send_func = send_callback;
+      }
+      void SetParseFunc(void (*parse_callback)(Session* s)){
+        parse_func = parse_callback; 
+      }
+      unsigned short peek_package_id(void);
+      bool send_wdata(const char* data, int len);
+      void wdata_dump(void);
   };
   class Socket{
     public:
@@ -50,6 +64,7 @@ namespace NEO
       void abc(void);
       void makelisten(int listen_port, void (*new_connection_func)(Session* s));
       void do_recv_send(int timeout);
+      void do_parse_package(void);
   };
 }
 
