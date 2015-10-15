@@ -150,15 +150,22 @@ void Socket::do_recv_send(int timeout_sec){
    					Session* p = sessions[z];
    					if (p->GetFD() == i){
    					  //printf("nbytes=%d,p->rdata_size=%d,\n",nbytes,p->rdata_size);
-   					  if (nbytes > p->rdata_size){
-              	p->rdata = (char*)realloc((p->rdata) ? p->rdata:NULL, nbytes);
-   					  }
-   					  p->rdata_size = nbytes;
-   					  memset(p->rdata,0,p->rdata_size);
-   					  memcpy(p->rdata,buf,p->rdata_size);
-   					  if (p->recv_func){
-   		                p->recv_func(p);
-                      }
+   					       if ((p->rdata_size + nbytes) > p->max_rdata){
+                      p->max_rdata = (p->rdata_size + nbytes);
+              	      p->rdata = (char*)realloc((p->rdata) ? p->rdata:NULL, (p->rdata_size + nbytes));
+   					          if (p->rdata) perror("realloc");
+                    }
+					
+   					  if (p->rdata_size){
+                        //still have recv data need to parse!
+                        printf("do_recv_send: still have recv data need to parse!\n");
+                        p->rdata_size += nbytes;
+                        memcpy(&p->rdata[p->rdata_size],buf,nbytes);
+					  }else{
+					    p->rdata_size = nbytes;
+					    memset(p->rdata,0,nbytes);
+   					    memcpy(p->rdata,buf,nbytes);
+					  }
    					  break;
    					}
    				}		
