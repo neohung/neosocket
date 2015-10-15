@@ -36,6 +36,7 @@ template<>
 struct Packet_Fixed<0x7531>
 {
    static const uint16_t PACKET_ID = 0x7531;
+   uint16_t magic_packet_id = PACKET_ID;
    Version version;
 };
 //----

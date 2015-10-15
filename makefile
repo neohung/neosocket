@@ -19,18 +19,19 @@ else
 	RUNSCRIPT := ./$(TARGET)
 endif
 
+CFLAGS :=-std=c++11
 SRCS := $(wildcard *.cpp)
 OBJS := $(SRCS:.cpp=.o)
 
 all:$(TARGET)
 
-%.o: %.c
+%.o: %.cpp
 	@echo --[CC]-- $@
-	$(CC) -c -o"$@" "$<"
+	$(CC) -c -o"$@" "$<" $(CFLAGS)
 
 $(TARGET): $(OBJS)
 	@echo --[TARGET]-- $@
-	$(CC) -o "$(TARGET)" $(OBJS) $(LIBS)
+	$(CC) -o "$(TARGET)" $(OBJS) $(LIBS) $(CFLAGS)
 	@echo [Finished]
 
 clean:

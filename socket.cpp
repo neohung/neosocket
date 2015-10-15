@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <cstring> //memmove,memset,memcpy in linux
+
 #include "socket.hpp"
 
 using namespace NEO;

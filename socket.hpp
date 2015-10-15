@@ -19,6 +19,11 @@
 
 namespace NEO
 {
+  struct Buffer
+   {
+    std::vector<unsigned char> bytes;
+   };
+   
   class Session{
     public:
       int socketfd;
