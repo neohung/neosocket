@@ -21,13 +21,14 @@ namespace NEO
 {
   struct Buffer
    {
-    std::vector<unsigned char> bytes;
+    std::vector<char> bytes;
    };
    
   class Session{
     public:
       int socketfd;
   	  int rdata_size;
+      int max_rdata;
   	  char* rdata;
   	  int wdata_size;
       int max_wdata;
@@ -36,7 +37,7 @@ namespace NEO
   	  void (*recv_func)(Session* s);
   	  void (*send_func)(Session* s);
   	  void (*parse_func)(Session* s);
-  	  Session(){wdata = NULL;rdata = NULL ;recv_func = NULL;rdata_size=0;parse_func=NULL;send_func=NULL;wdata_size = 0;max_wdata=0;};
+  	  Session(){wdata = NULL;rdata = NULL ;recv_func = NULL;rdata_size=0;parse_func=NULL;send_func=NULL;wdata_size = 0;max_wdata=0;max_rdata;};
   	  int GetFD(){return socketfd;};
   	  //Singleton
   	  //Session& GetInstance(){ static Session instance;return instance;};
@@ -52,6 +53,9 @@ namespace NEO
       unsigned short peek_package_id(void);
       bool send_wdata(const char* data, int len);
       void wdata_dump(void);
+      void clean_rdata(void){rdata_size = 0;};
+      void clean_wdata(void){wdata_size = 0;};
+      void remove_rdata(int len){rdata_size -= len;if (rdata_size<0)rdata_size=0;};
   };
   class Socket{
     public:

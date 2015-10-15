@@ -40,13 +40,13 @@ void recv_callback(NEO::Session* s)
 
 void parse_callback(NEO::Session* s)
 {
-  //printf("parse_callback\n");
   if (s->rdata_size >=2){
     switch(s->peek_package_id())
     {
-      case 0x7530 :       // Request of the server version
-        {
-          printf("Request of the server version\n");
+      case 0x7530:       // Request of the server version
+        {       
+          printf("0x%04X: Request of the server version\n",s->peek_package_id());
+          s->remove_rdata(sizeof(NEO::Packet_Fixed<0x7530>));
           NEO::Packet_Fixed<0x7531> fixed_7531;
           NEO::Version version = CURRENT_LOGIN_SERVER_VERSION;
           version.flags = 1;//login_conf.new_account ? 1 : 0;
@@ -56,9 +56,23 @@ void parse_callback(NEO::Session* s)
           buf.bytes.resize(sizeof(NEO::Packet_Fixed<0x7531>));
           auto& net_fixed = reinterpret_cast<NEO::Packet_Fixed<0x7531>&>(*(buf.bytes.begin() + 0));
           net_fixed = fixed_7531;
-          //
-          //send_fpacket<0x7531, 10>(s, fixed_31);    
+          s->send_wdata(buf.bytes.data(),buf.bytes.size());
+        
         }
+        break;
+        case 0x0064:
+        {
+          printf("0x%04X: Request of login account\n",s->peek_package_id());
+          printf("Packet_Fixed<0x0064> size=%d\n",sizeof(NEO::Packet_Fixed<0x0064>));
+          printf("rdata_size=%d\n",s->rdata_size );
+          auto net_fixed = reinterpret_cast<NEO::Packet_Fixed<0x0064>*>(&s->rdata);
+          printf("id=0x%04x\n",net_fixed->magic_packet_id);
+          //Packet_Fixed<0x0064>
+		  s->remove_rdata(sizeof(NEO::Packet_Fixed<0x0064>));
+        }
+        break;
+        default:
+          printf("Got ID 0x%04X\n",s->peek_package_id());
         break;
     }
   }
