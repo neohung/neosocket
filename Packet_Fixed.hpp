@@ -50,25 +50,59 @@ struct Packet_Fixed<0x7531>
 // All clients must now set both defined version 2 flags.
 //
 
+#if defined(_MSC_VER)
+#pragma pack( push, packing )
+#pragma pack( 1 )
+#endif
+
 template<uint8_t n>
 class VString {
   char _data[n];
-};
+//public:
+//  char* toChar(void){return _data;};
+}
+#if defined(__GNUC__)
+__attribute__((packed))
+#endif
+;
 
-struct AccountName : VString<23> {};
-struct AccountPass : VString<23> {};
+
+struct AccountName : VString<23> {
+
+}
+#if defined(__GNUC__)
+__attribute__((packed))
+#endif
+;
+
+struct AccountPass : VString<23> {
+
+}
+#if defined(__GNUC__)
+__attribute__((packed))
+#endif
+;
+
 
 template<>
 struct Packet_Fixed<0x0064>
 {
     static const uint16_t PACKET_ID = 0x0064;
-    uint16_t magic_packet_id = PACKET_ID;
-    uint32_t unknown = {};
+    uint16_t magic_packet_id = 0x0064; //2 bytes
+    uint32_t unknown = {} ;                //4bytes
     AccountName account_name = {};
     AccountPass account_pass = {};
     uint8_t version = {};
 };
-
+/*
+#if defined(__GNUC__)
+__attribute__((packed))
+#endif
+;
+*/
+#if defined(_MSC_VER)
+#pragma pack( pop, packing )
+#endif
 
 //----
 }

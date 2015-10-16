@@ -62,14 +62,41 @@ void parse_callback(NEO::Session* s)
         break;
         case 0x0064:
         {
+          /*
           printf("0x%04X: Request of login account\n",s->peek_package_id());
           printf("Packet_Fixed<0x0064> size=%d\n",sizeof(NEO::Packet_Fixed<0x0064>));
           printf("rdata_size=%d\n",s->rdata_size );
-          auto net_fixed = reinterpret_cast<NEO::Packet_Fixed<0x0064>*>(&s->rdata);
-          printf("id=0x%04x\n",net_fixed->magic_packet_id);
+          for(int i=0;i<s->rdata_size;i++){
+            printf("%d:[0x%x]\n",i,s->rdata[i]);
+          }
+          printf("s->rdata addr=0x%p\n",s->rdata);
+          //auto net_fixed = reinterpret_cast<NEO::Packet_Fixed<0x0064>*>(s->rdata);
+          //printf("id=0x%04x\n",net_fixed->magic_packet_id);
+          
+          NEO::Packet_Fixed<0x0064> aaa;
+          NEO::Packet_Fixed<0x0064>* net_fixed;
+          net_fixed = &aaa;
+          printf("A addr=%x\n",net_fixed);
+          printf("size=%d\n",sizeof(net_fixed->magic_packet_id));
+         // printf("size=%d\n",sizeof(net_fixed->unknown));
+          printf("size=%d\n",sizeof(net_fixed->account_name));
+          void* p1 = &(net_fixed->account_name);
+          void* p2 = net_fixed;
+          printf("AA addr=%x\n",(int)p1-(int)p2);
+          //printf("Acc addr=%x\n",net_fixed->account_name.toChar());
+          
+          //printf("Acc addr=%c\n",net_fixed->account_name.toChar());
+          //printf("Acc addr=%c\n",net_fixed->account_name.toChar());
+          //printf("Acc addr=%c\n",net_fixed->account_name.toChar());
+
+
+          //printf("Account=[%s]\n",net_fixed->account_name.toChar());
+          //printf("Account=[%s]\n",net_fixed->account_pass.toChar());
           //Packet_Fixed<0x0064>
-		  s->remove_rdata(sizeof(NEO::Packet_Fixed<0x0064>));
+		      s->remove_rdata(sizeof(NEO::Packet_Fixed<0x0064>));
+        */
         }
+
         break;
         default:
           printf("Got ID 0x%04X\n",s->peek_package_id());
@@ -98,10 +125,23 @@ void connection_callback(NEO::Session* s)
 
 int main(void)
 { 
+   NEO::Packet_Fixed<0x0064> aaa;
+          NEO::Packet_Fixed<0x0064>* net_fixed;
+          net_fixed = &aaa;
+          printf("net_fixed->account_name addr=%x\n",&net_fixed->account_name);
+          printf("net_fixed addr=%x\n",net_fixed);
+          printf("size=%d\n",sizeof(net_fixed->magic_packet_id));
+          //printf("size=%d\n",sizeof(net_fixed->unknown));
+          printf("size=%d\n",sizeof(net_fixed->account_name));
+          //void* p1 = &(net_fixed->account_name);
+          //void* p2 = net_fixed;
+          //printf("offset addr=%x\n",(int)p1-(int)p2);
+  /*
   neos.makelisten(1234, connection_callback);
   for( ; ; ) {
     neos.do_recv_send(3);
     neos.do_parse_package();
   }
+  */
   exit(0);
 }
