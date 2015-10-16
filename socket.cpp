@@ -124,12 +124,8 @@ void Socket::do_recv_send(int timeout_sec){
                 }  
                 //printf("Server: new connection on socket %d\n", client_fd);
                 Session* s1 = (Session*)malloc(sizeof(Session));
+                s1->initSession();
                 s1->socketfd = client_fd;
-                s1->rdata_size = 0;
-                s1->wdata_size = 0;
-                s1->connected = 0;
-                s1->rdata = NULL;
-                s1->wdata = NULL;
                 sessions.push_back(s1);
                 for(int z=0;z<sessions.size();z++){
    					Session* p = sessions[z];
@@ -151,11 +147,18 @@ void Socket::do_recv_send(int timeout_sec){
    					if (p->GetFD() == i){
    					  //printf("nbytes=%d,p->rdata_size=%d,\n",nbytes,p->rdata_size);
    					       if ((p->rdata_size + nbytes) > p->max_rdata){
+                      //printf("do reallo\n");
                       p->max_rdata = (p->rdata_size + nbytes);
               	      p->rdata = (char*)realloc((p->rdata) ? p->rdata:NULL, (p->rdata_size + nbytes));
-   					          if (p->rdata) perror("realloc");
+   					          //p->rdata = (char*)malloc((p->rdata_size + nbytes));
+                     
+                      if (!(p->rdata)) perror("realloc");
                     }
-					
+              /*if (!(p->rdata)){ 
+	               p->rdata = (char*)malloc((p->rdata_size+nbytes));
+                  printf("do malloc\n");
+               }
+              */
    					  if (p->rdata_size){
                         //still have recv data need to parse!
                         printf("do_recv_send: still have recv data need to parse!\n");
@@ -164,7 +167,7 @@ void Socket::do_recv_send(int timeout_sec){
 					  }else{
 					    p->rdata_size = nbytes;
 					    memset(p->rdata,0,nbytes);
-   					    memcpy(p->rdata,buf,nbytes);
+   					  memcpy(p->rdata,buf,nbytes);
 					  }
    					  break;
    					}

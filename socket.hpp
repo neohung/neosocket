@@ -37,7 +37,14 @@ namespace NEO
   	  void (*recv_func)(Session* s);
   	  void (*send_func)(Session* s);
   	  void (*parse_func)(Session* s);
-  	  Session(){wdata = NULL;rdata = NULL ;recv_func = NULL;rdata_size=0;parse_func=NULL;send_func=NULL;wdata_size = 0;max_wdata=0;max_rdata;};
+  	  Session(){};
+      void initSession(void){
+        wdata = NULL;rdata = NULL ;recv_func = NULL;rdata_size=0;parse_func=NULL;send_func=NULL;wdata_size = 0;max_wdata=0;max_rdata = 0;
+        //rdata = (char*)malloc(128);
+        //rdata_size = 0;
+        //max_rdata = 128;
+        //memset(rdata,0,128);
+      };
   	  int GetFD(){return socketfd;};
   	  //Singleton
   	  //Session& GetInstance(){ static Session instance;return instance;};

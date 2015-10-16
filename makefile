@@ -10,7 +10,7 @@ ifneq (,$(or $(findstring mingw, $(MACHINE)), $(findstring cygwin, $(MACHINE))))
 	LIBS = -lwsock32 
 	RM = del
 	TARGET := $(TARGET).exe
-	RUNSCRIPT := .\$(TARGET)
+	RUNSCRIPT := cmd \/C neo.exe
 	RM := rm
 else
 	PLATFORM = LINUX
