@@ -1,4 +1,4 @@
-TARGET = neo
+TARGET = client
 
 CC = g++
 MACHINE = $(shell $(CC) -dumpmachine)
@@ -18,9 +18,11 @@ else
 	RM = rm
 	RUNSCRIPT := ./$(TARGET)
 endif
-
-CFLAGS :=-std=c++11
+#-fpermissive -Wall
+CFLAGS :=-std=c++11 -I../common
 SRCS := $(wildcard *.cpp)
+SRCS += $(wildcard ../common/*.cpp)
+
 OBJS := $(SRCS:.cpp=.o)
 
 all:$(TARGET)
