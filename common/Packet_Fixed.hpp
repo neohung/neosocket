@@ -158,8 +158,96 @@ struct Packet_Repeat<0x0069>
     uint16_t is_new = {};
 }__ALIGNED__;
 
+// Packet 0x007e: "ping"
+// define: CMSG_MAP_PING
+// pre:  TIMER, packet 0x0073
+// post: packet 0x007f
+// Request ping.
+//
+template<>
+struct Packet_Fixed<0x007e>
+{
+    static const uint16_t PACKET_ID = 0x007e;
+
+    // TODO remove this
+    uint16_t magic_packet_id = PACKET_ID;
+    uint32_t client_tick = {};
+} __ALIGNED__;
+
+// Packet 0x007f: "pong"
+// define: SMSG_SERVER_PING
+// pre:  packet 0x007e
+// post: NOTHING
+// Provide ping.
+//
+
+template<>
+struct Packet_Fixed<0x007f>
+{
+    static const uint16_t PACKET_ID = 0x007f;
+
+    // TODO remove this
+    uint16_t magic_packet_id = PACKET_ID;
+    uint32_t tick = {} ;
+}__ALIGNED__;
+
+// Packet 0x0065: "connect char"
+// define: CMSG_CHAR_SERVER_CONNECT
+// pre:  packet 0x0069, packet 0x0092, packet 0x00b3
+// post: packet 0x006b, packet 0x006c, packet 0x2712, packet 0x2716
+// Begin connection to the char server, based on keys the login
+// server gave us.
+//
+template<>
+struct Packet_Fixed<0x0065>
+{
+    static const uint16_t PACKET_ID = 0x0065;
+
+    // TODO remove this
+    uint16_t magic_packet_id = PACKET_ID;
+    AccountId account_id = {};
+    uint32_t login_id1 = {};
+    uint32_t login_id2 = {};
+    uint16_t packet_client_version = {};
+    SEX sex = {};
+}__ALIGNED__;
 
 
+
+
+/*
+template<>
+struct NetPacket_Head<0x0069>
+{
+    Little16 magic_packet_id;
+    Little16 magic_packet_length;
+    Little32 login_id1;
+    Little32 account_id;
+    Little32 login_id2;
+    Little32 unused;
+    NetString<sizeof(timestamp_milliseconds_buffer)> last_login_string;
+    Little16 unused2;
+    Byte sex;
+};
+template<>
+struct NetPacket_Repeat<0x0069>
+{
+    IP4Address ip;
+    Little16 port;
+    NetString<sizeof(ServerName)> server_name;
+    Little16 users;
+    Little16 maintenance;
+    Little16 is_new;
+};
+*/
+/*
+template<>
+struct NetPacket_Fixed<0x007f>
+{
+    uint16_t magic_packet_id;
+    uint32_t tick;
+};
+*/
 //--------------------------
 #ifdef _WIN32
 #pragma pack( pop, packing )

@@ -9,10 +9,8 @@ void Socket::abc(void){
         printf("\nabc\n");
 }
 
-
 void Socket::makeclient(const char* url,int port,int timeout_sec,void (*new_connection_func)(Session* s))
 {
-  struct sockaddr_in client_address;
   printf("socket(AF_INET, SOCK_STREAM, 0);\n");
   //tcp_socket = socket(AF_INET, SOCK_STREAM, 0);
   //udp_socket = socket(AF_INET, SOCK_DGRAM, 0);
@@ -20,7 +18,7 @@ void Socket::makeclient(const char* url,int port,int timeout_sec,void (*new_conn
     WSADATA wsa;
     WSAStartup(MAKEWORD(2,2),&wsa);
   #endif
-  int connect_fd = socket(AF_INET, SOCK_STREAM, 0);
+  int connect_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
   if (Socket::MAX_SOCKET_FD < connect_fd) Socket::MAX_SOCKET_FD = connect_fd;
   if (connect_fd == -1)
   {
@@ -30,19 +28,21 @@ void Socket::makeclient(const char* url,int port,int timeout_sec,void (*new_conn
     exit(-1);
   }
   printf("connect_fd fd=%d\n",connect_fd);
-  // sin_family is always set to AF_INET.
-  client_address.sin_family = AF_INET;
-  client_address.sin_addr.s_addr = inet_addr(url);
-  client_address.sin_port = htons(port);
-  if (connect(connect_fd, (struct sockaddr *)&client_address, sizeof(client_address)) == 0){
-    printf("Set non Blocking\n");
     #ifdef _WIN32
-      u_long enable = 1;
-      ioctlsocket(connect_fd, FIONBIO, &enable);
     #else
+  printf("Set unix non Blocking\n");
       fcntl(connect_fd, F_SETFL, O_NONBLOCK);
     #endif
- 
+  // sin_family is always set to AF_INET.
+  Socket::client_address.sin_family = AF_INET;
+  Socket::client_address.sin_addr.s_addr = inet_addr(url);
+  Socket::client_address.sin_port = htons(port);
+  if (connect(connect_fd, (struct sockaddr *)&(Socket::client_address), sizeof(Socket::client_address)) == 0){
+    #ifdef _WIN32
+    printf("Set win non Blocking\n");
+      u_long enable = 1;
+      ioctlsocket(connect_fd, FIONBIO, &enable);
+    #endif
     FD_ZERO(&(Socket::fds));
     Socket::connect_fd = connect_fd;
     FD_SET(Socket::connect_fd, &(Socket::fds));
@@ -51,11 +51,12 @@ void Socket::makeclient(const char* url,int port,int timeout_sec,void (*new_conn
     FD_ZERO(&write_fds);
     write_fds = Socket::fds;
     struct timeval timeout = {timeout_sec,0};
+    printf("select now\n");
     int SelectTiming = select(Socket::MAX_SOCKET_FD+1, 0, &(write_fds), 0, &timeout);
     switch (SelectTiming)
     {
       case 0:
-        printf("Timeout!\n");
+        //printf("Timeout!\n");
         break;
       case -1:
         perror("select");
@@ -64,7 +65,7 @@ void Socket::makeclient(const char* url,int port,int timeout_sec,void (*new_conn
         break;
       default:
       {
-        if (FD_ISSET(Socket::connect_fd, &write_fds)) {     
+        if (FD_ISSET(Socket::connect_fd, &write_fds)) {
             Session* s1 = (Session*)malloc(sizeof(Session));
             s1->initSession();
             s1->socketfd = Socket::connect_fd;
@@ -73,9 +74,9 @@ void Socket::makeclient(const char* url,int port,int timeout_sec,void (*new_conn
               Session* p = sessions[z];
               if (p->GetFD() == Socket::connect_fd){
                 if (Socket::connection_func) Socket::connection_func(s1);
-                break; 
+                break;
               }
-            }     
+            }
         }
       }
     }
@@ -86,7 +87,27 @@ void Socket::makeclient(const char* url,int port,int timeout_sec,void (*new_conn
   //int len = recv(connect_fd, buffer, 128, 0);
   //const char* aaa = "abcde";
   //int len = send(connect_fd, aaa, 5, 0);
-   
+
+}
+
+
+bool Socket::reconnect(void){
+printf("Try to reconnect!\n");
+if (connect(Socket::connect_fd, (struct sockaddr *)&(Socket::client_address), sizeof(Socket::client_address)) == 0){
+    #ifdef _WIN32
+    printf("Set win non Blocking\n");
+      u_long enable = 1;
+      ioctlsocket(Socket::connect_fd, FIONBIO, &enable);
+    #endif
+    FD_ZERO(&(Socket::fds));
+    FD_SET(Socket::connect_fd, &(Socket::fds));
+    //Socket::connection_func = new_connection_func;
+    fd_set write_fds;
+    FD_ZERO(&write_fds);
+    write_fds = Socket::fds;
+    return 1;
+}
+return 0;
 }
 
 void Socket::do_client_event(int timeout_sec){
@@ -122,6 +143,7 @@ for(int z=0;z<sessions.size();z++){
     {
       case 0:
         printf("Timeout!\n");
+	//reconnect();
         break;
       case -1:
         perror("select");
@@ -139,7 +161,7 @@ for(int z=0;z<sessions.size();z++){
                   if (p->GetFD() == Socket::connect_fd){
                     if ((p->rdata_size + nbytes) > p->max_rdata){
                       p->max_rdata = (p->rdata_size + nbytes);
-                      p->rdata = (char*)realloc((p->rdata) ? p->rdata:NULL, (p->rdata_size + nbytes)); 
+                      p->rdata = (char*)realloc((p->rdata) ? p->rdata:NULL, (p->rdata_size + nbytes));
                       if (!(p->rdata)) perror("realloc");
                     }
                     if (p->rdata_size){
@@ -265,7 +287,7 @@ void Socket::do_recv_send(int timeout_sec){
       }
     }
   }
-  //        
+  //
 	char buf[256];
   int nbytes;
 	fd_set read_fds;
@@ -297,10 +319,10 @@ void Socket::do_recv_send(int timeout_sec){
                 printf("Try to accept a new connection fail!\n");
                 perror("accept");
               } else {
-                FD_SET(client_fd, &(Socket::fds));               
+                FD_SET(client_fd, &(Socket::fds));
                 if (client_fd > Socket::MAX_SOCKET_FD) {
                   Socket::MAX_SOCKET_FD = client_fd;
-                }  
+                }
                 //printf("Server: new connection on socket %d\n", client_fd);
                 Session* s1 = (Session*)malloc(sizeof(Session));
                 s1->initSession();
@@ -330,10 +352,10 @@ void Socket::do_recv_send(int timeout_sec){
                       p->max_rdata = (p->rdata_size + nbytes);
               	      p->rdata = (char*)realloc((p->rdata) ? p->rdata:NULL, (p->rdata_size + nbytes));
    					          //p->rdata = (char*)malloc((p->rdata_size + nbytes));
-                     
+
                       if (!(p->rdata)) perror("realloc");
                     }
-              /*if (!(p->rdata)){ 
+              /*if (!(p->rdata)){
 	               p->rdata = (char*)malloc((p->rdata_size+nbytes));
                   printf("do malloc\n");
                }
@@ -351,10 +373,10 @@ void Socket::do_recv_send(int timeout_sec){
              if (p->recv_func) {
                       p->recv_func(p);
                     }
-                   
+
    					  break;
    					}
-   				}		
+   				}
               } else{
                 //Error handle
                 if (nbytes == 0) {
@@ -374,11 +396,11 @@ void Socket::do_recv_send(int timeout_sec){
    					      }
    					      //free(p);
    				      }
-              }            
+              }
             }
           }
         }
-        
+
       }
 	}
 }
@@ -409,7 +431,7 @@ bool Session::send_wdata(const char* data, int len)
         //realloc_fifo(s, s->max_rdata, s->max_wdata << 1);
         printf("socket: %d wdata expanded to %d bytes.\n", socketfd, max_wdata);
     }
-    
+
     wdata_size += len;
     //先計算出矩陣的起始位置當作end, 減去要填入的資料長度當作start
     char *end = reinterpret_cast<char *>(&wdata[wdata_size + 0]);
@@ -428,7 +450,7 @@ void Session::wdata_dump(void)
       if ((i & 15) == 0)
             printf("%04X ", i);
       if ((i - 8) % 16 == 0)  // -8 + 1
-            printf(" ");  
+            printf(" ");
       printf("%02X ", (unsigned char) wdata[i]);
       if ((i+1)% 16 == 0){
         printf("|\n");
@@ -448,7 +470,7 @@ void Session::rdata_dump(void)
       if ((i & 15) == 0)
             printf("%04X ", i);
       if ((i - 8) % 16 == 0)  // -8 + 1
-            printf(" ");  
+            printf(" ");
       printf("%02X ", (unsigned char) rdata[i]);
       if ((i+1)% 16 == 0){
         printf("|\n");

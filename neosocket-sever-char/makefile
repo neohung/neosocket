@@ -1,4 +1,4 @@
-TARGET = server
+TARGET = serve-char
 
 CC = g++
 MACHINE = $(shell $(CC) -dumpmachine)

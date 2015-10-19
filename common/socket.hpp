@@ -8,13 +8,14 @@
 #else
   #include <netinet/in.h>
   #include <netinet/tcp.h> //For TCP_NODELAY
+  #include <arpa/inet.h>   //For inet_addr()
 #endif
 #include <fcntl.h>
 #include <cstdlib>
 #include <stdio.h>
 
 #include <unistd.h> // close()
-#include <vector> 
+#include <vector>
 #include <assert.h>
 
 #include "Packet_Fixed.hpp"
@@ -25,7 +26,7 @@ namespace NEO
    {
     std::vector<char> bytes;
    };
-   
+
   class Session{
     public:
       int socketfd;
@@ -57,7 +58,7 @@ namespace NEO
         send_func = send_callback;
       }
       void SetParseFunc(void (*parse_callback)(Session* s)){
-        parse_func = parse_callback; 
+        parse_func = parse_callback;
       }
       unsigned short peek_package_id(void);
       bool send_wdata(const char* data, int len);
@@ -70,9 +71,10 @@ namespace NEO
   class Socket{
     public:
       //Session sessions[1024];
-      std::vector<Session*> sessions;     
+      std::vector<Session*> sessions;
       fd_set fds;
       int connect_fd;
+      struct sockaddr_in client_address;
       int MAX_SOCKET_FD;
       void (*connection_func)(Session* s);
 	    Socket(){
@@ -83,13 +85,14 @@ namespace NEO
         MAX_SOCKET_FD = 0;
         connection_func = NULL;
       };
+      bool reconnect(void);
       void abc(void);
       void makelisten(int listen_port, void (*new_connection_func)(Session* s));
       void makeclient(const char* url,int port,int timeout_sec, void (*new_connection_func)(Session* s));
       void do_recv_send(int timeout);
       void do_parse_package(void);
       void do_client_event(int timeout_sec);
- 
+
   };
 }
 

@@ -75,11 +75,21 @@ void parse_callback(NEO::Session* s)
         auto net_fixed = reinterpret_cast<NEO::Packet_Fixed<0x006a>*>(s->rdata);
         printf("error_code[%d]: %s\n",net_fixed->error_code,net_fixed->error_message.c_str());
         s->remove_rdata(sizeof(NEO::Packet_Fixed<0x006a>));
-      }      
+      }
+      break;
+      case 0x0063:       // receive update host notify
+      {
+          auto net_fixed = reinterpret_cast<NEO::Packet_Head<0x0063>*>(s->rdata);
+          printf("magic_packet_length=%d\n",net_fixed->magic_packet_length);
+          int repeats_size =  net_fixed->magic_packet_length - sizeof(net_fixed->magic_packet_id) - sizeof(net_fixed->magic_packet_length);
+          int repeat_size =  net_fixed->magic_packet_length - sizeof(net_fixed->magic_packet_id) - sizeof(net_fixed->magic_packet_length);
+          
+          s->remove_rdata(sizeof(NEO::Packet_Head<0x0063>));
+      }
       break;
       /*
       case 0x7530:       // Request of the server version
-        {       
+        {
           printf("0x%04X: Request of the server version\n",s->peek_package_id());
           s->remove_rdata(sizeof(NEO::Packet_Fixed<0x7530>));
           NEO::Packet_Fixed<0x7531> fixed_7531;
@@ -92,7 +102,7 @@ void parse_callback(NEO::Session* s)
           auto& net_fixed = reinterpret_cast<NEO::Packet_Fixed<0x7531>&>(*(buf.bytes.begin() + 0));
           net_fixed = fixed_7531;
           s->send_wdata(buf.bytes.data(),buf.bytes.size());
-        
+
         }
         break;
         case 0x0064:
@@ -104,18 +114,18 @@ void parse_callback(NEO::Session* s)
           //  printf("%d:[0x%x]\n",i,s->rdata[i]);
           //}
           auto net_fixed = reinterpret_cast<NEO::Packet_Fixed<0x0064>*>(s->rdata);
-          printf("id=0x%04x\n",net_fixed->magic_packet_id);          
+          printf("id=0x%04x\n",net_fixed->magic_packet_id);
           printf("Account=[%s]\n",net_fixed->account_name.c_str());
           printf("PassWord=[%s]\n",net_fixed->account_pass.c_str());
 		      //send update host package
           std::vector< NEO::Packet_Repeat<0x0063> > url;
           //char update_url[] = "http://127.0.0.1/aaa";
           //size_t total_size = sizeof(Packet_Head<0x0063>) + update_url.size() * sizeof(Packet_Repeat<0x0063>);
-    
+
 
 
           s->remove_rdata(sizeof(NEO::Packet_Fixed<0x0064>));
-        
+
         }
 
         break;
@@ -137,7 +147,7 @@ void parse_callback(NEO::Session* s)
   }
   //s->rdata[s->rdata_size] = '\0';
   //printf("ASCII=[%s]\n",s->rdata);
- 
+
 }
 void connection_callback(NEO::Session* s)
 {
@@ -150,11 +160,12 @@ void connection_callback(NEO::Session* s)
   //s->
 }
 int main(void)
-{ 
-  neos.makeclient("192.168.85.130",6901, 3, connection_callback);
-  //neos.makeclient("127.0.0.1",1234, 3, connection_callback);
-  
+{
+  //neos.makeclient("192.168.85.130",6901, 3, connection_callback);
+  neos.makeclient("127.0.0.1",1234, 3, connection_callback);
+  //printf("Wait connection.\n");
   for( ; ; ) {
+    //printf(".");
     neos.do_client_event(3);
     //neos.do_recv_send(3);
     neos.do_parse_package();
