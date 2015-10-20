@@ -480,3 +480,11 @@ void Session::rdata_dump(void)
     printf(
           "---- -----------------------  ------------------------\n");
 }
+
+void Session::remove_rdata(int len){
+  rdata_size -= len;
+  if (rdata_size<0){rdata_size=0;return;}
+  memmove(&rdata[0], &rdata[len], rdata_size);
+
+};
+ 

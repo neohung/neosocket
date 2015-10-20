@@ -66,7 +66,8 @@ namespace NEO
       void rdata_dump(void);
       void clean_rdata(void){rdata_size = 0;};
       void clean_wdata(void){wdata_size = 0;};
-      void remove_rdata(int len){rdata_size -= len;if (rdata_size<0)rdata_size=0;};
+      void remove_rdata(int len);
+
   };
   class Socket{
     public:
