@@ -145,6 +145,20 @@ void parse_callback(NEO::Session* s)
         char_client.makeclient(char_ip,char_port, 3, char_connection_callback);
       }
       break;
+      case 0x006b:       // connect char success
+      {
+        s->rdata_dump();
+        auto net_head = reinterpret_cast<NEO::Packet_Head<0x006b>*>(s->rdata);
+        int repeats_size = net_head->magic_packet_length - sizeof(NEO::Packet_Head<0x006b>);
+        int repeat_size =  repeats_size / sizeof(NEO::Packet_Repeat<0x006b>);
+        s->remove_rdata(sizeof(NEO::Packet_Head<0x006b>));
+    
+        for(int i=0;i<repeat_size;i++){ 
+          auto& net_repeat = reinterpret_cast<NEO::Packet_Repeat<0x006b>&>(s->rdata[0]); 
+          NEO::CharSelect char_select = net_repeat.char_select;
+          s->remove_rdata(sizeof(NEO::Packet_Repeat<0x006b>));      
+        }
+      }
       default:
           printf("Got ID 0x%04X\n",s->peek_package_id());
            s->clean_rdata();
@@ -177,8 +191,8 @@ void login_connection_callback(NEO::Session* s)
 
 int main(void)
 {
-  //neos.makeclient("192.168.85.130",6901, 3, connection_callback);
-  login_client.makeclient("127.0.0.1",1234, 3, login_connection_callback);
+  login_client.makeclient("192.168.85.130",6901, 3, login_connection_callback);
+  //login_client.makeclient("127.0.0.1",1234, 3, login_connection_callback);
   //printf("Wait connection.\n");
   for( ; ; ) {
     //printf(".");

@@ -213,6 +213,30 @@ struct Packet_Fixed<0x0065>
 }__ALIGNED__;
 
 
+// Packet 0x006b: "connect char success"
+// define: SMSG_CHAR_LOGIN
+// pre:  packet 0x0065, packet 0x2713
+// post: PRETTY
+// List account's characters on this server.
+//
+template<>
+struct Packet_Head<0x006b>
+{
+    static const uint16_t PACKET_ID = 0x006b;
+
+    // TODO remove this
+    uint16_t magic_packet_id = PACKET_ID;
+    // TODO remove this
+    uint16_t magic_packet_length = {};
+    VString<19> unused = {};
+}__ALIGNED__;
+template<>
+struct Packet_Repeat<0x006b>
+{
+    static const uint16_t PACKET_ID = 0x006b;
+
+    CharSelect char_select = {};
+}__ALIGNED__;
 
 
 /*

@@ -38,8 +38,11 @@ class VString {
 public:
   const char *c_str() const{return _data;};
   void setString(const char* src){memcpy(_data,src,n);};
-
-
+    VString<n> to_lower() const;
+    VString<n> to_upper() const;
+  template<uint8_t len>
+    __attribute__((format(printf, 2, 0)))
+    int do_vprint(VString<len>& out, const char *fmt, va_list ap);
 }__ALIGNED__;
 
 struct AccountName : VString<23> {}__ALIGNED__;
@@ -132,6 +135,144 @@ public:
 //protected:
   constexpr explicit AccountId(uint32_t a) : Wrapped<uint32_t>(a) {}
 }__ALIGNED__;
+
+
+//
+struct CharName
+{
+private:
+    VString<23> _impl;
+public:
+    CharName() = default;
+    explicit CharName(VString<23> name)
+    : _impl(name)
+    {}
+
+    VString<23> to__actual() const
+    {
+        return _impl;
+    }
+    VString<23> to__lower() const
+    {
+        return _impl.to_lower();
+    }
+    VString<23> to__upper() const
+    {
+        return _impl.to_upper();
+    }
+    VString<23> to__canonical() const
+    {
+//#if NAME_IGNORING_CASE == 0
+        return to__actual();
+//#endif
+//#if NAME_IGNORING_CASE == 1
+//      return to__lower();
+//#endif
+    }
+
+/*
+    friend bool operator == (const CharName& l, const CharName& r)
+    { return l.to__canonical() == r.to__canonical(); }
+    friend bool operator != (const CharName& l, const CharName& r)
+    { return l.to__canonical() != r.to__canonical(); }
+    friend bool operator < (const CharName& l, const CharName& r)
+    { return l.to__canonical() < r.to__canonical(); }
+    friend bool operator <= (const CharName& l, const CharName& r)
+    { return l.to__canonical() <= r.to__canonical(); }
+    friend bool operator > (const CharName& l, const CharName& r)
+    { return l.to__canonical() > r.to__canonical(); }
+    friend bool operator >= (const CharName& l, const CharName& r)
+    { return l.to__canonical() >= r.to__canonical(); }
+*/
+    friend
+    VString<23> convert_for_printf(const CharName& vs) { return vs.to__actual(); }
+};
+
+class CharId : public Wrapped<uint32_t> 
+{ 
+  public: 
+    constexpr CharId() : Wrapped<uint32_t>() {} 
+  protected: 
+    constexpr explicit CharId(uint32_t a) : Wrapped<uint32_t>(a) {} 
+};
+
+class ItemNameId : public Wrapped<uint16_t> 
+{ 
+  public: 
+    constexpr ItemNameId() : Wrapped<uint16_t>() {} 
+  protected: 
+    constexpr explicit ItemNameId(uint16_t a) : Wrapped<uint16_t>(a) {} 
+};
+
+class Species : public Wrapped<uint16_t> 
+{ 
+  public: 
+    explicit operator bool() const = delete; 
+    bool operator !() const = delete; 
+    constexpr Species() : Wrapped<uint16_t>() {} 
+  protected: 
+    constexpr explicit Species(uint16_t a) : Wrapped<uint16_t>(a) {} 
+};
+
+
+enum class Opt0 : uint16_t
+{
+    ZERO            = 0x0000,
+    // [Fate] This is the GM `@hide' flag
+    HIDE            = 0x0040,
+    // [Fate] Complete invisibility to other clients
+    INVISIBILITY    = 0x1000,
+    // ?
+    REAL_ANY_HIDE   = HIDE,
+};
+
+struct Stats6
+{
+    uint8_t str = {};
+    uint8_t agi = {};
+    uint8_t vit = {};
+    uint8_t int_ = {};
+    uint8_t dex = {};
+    uint8_t luk = {};
+};
+
+struct CharSelect
+{
+    CharId char_id = {};
+    uint32_t base_exp = {};
+    uint32_t zeny = {};
+    uint32_t job_exp = {};
+    uint32_t job_level = {};
+    ItemNameId shoes = {};
+    ItemNameId gloves = {};
+    ItemNameId cape = {};
+    ItemNameId misc1 = {};
+    Opt0 option = {};
+    uint16_t unused = {};
+    uint32_t karma = {};
+    uint32_t manner = {};
+    uint16_t status_point = {};
+    uint16_t hp = {};
+    uint16_t max_hp = {};
+    uint16_t sp = {};
+    uint16_t max_sp = {};
+    uint16_t speed = {};
+    Species species = {};
+    uint16_t hair_style = {};
+    uint16_t weapon = {};
+    uint16_t base_level = {};
+    uint16_t skill_point = {};
+    ItemNameId head_bottom = {};
+    ItemNameId shield = {};
+    ItemNameId head_top = {};
+    ItemNameId head_mid = {};
+    uint16_t hair_color = {};
+    ItemNameId misc2 = {};
+    CharName char_name = {};
+    Stats6 stats = {};
+    uint8_t char_num = {};
+    uint8_t unused2 = {};
+};
 
 
 
