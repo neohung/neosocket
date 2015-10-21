@@ -17,6 +17,7 @@ namespace NEO
 template <int>struct Packet_Fixed{} __ALIGNED__;
 template <int>struct Packet_Head{} __ALIGNED__;
 template <int>struct Packet_Repeat{} __ALIGNED__;
+template <int>struct Packet_Payload{} __ALIGNED__;
 // Packet 0x7530: "version"
 // pre:  ADMIN, BOOT, packet 0x7919
 // post: packet 0x7531
@@ -236,6 +237,28 @@ struct Packet_Repeat<0x006b>
     static const uint16_t PACKET_ID = 0x006b;
 
     CharSelect char_select = {};
+}__ALIGNED__;
+
+// Packet 0x8000: "special hold notify"
+// pre:  OTHER
+// post: OTHER
+// A special packet that is handled specially.
+//
+// The "is the packet complete" logic will read its given length,
+// but the "skip packet" will only skip 4 bytes, thus allowing
+// transactions. I'm still not entirely convinced that this is a
+// good idea - perhaps explicit 'being transaction buffer' and
+// 'end transaction buffer' packets? Allow nesting?
+//
+template<>
+struct Packet_Payload<0x8000>
+{
+    static const uint16_t PACKET_ID = 0x8000;
+
+    // TODO remove this
+    uint16_t magic_packet_id = PACKET_ID;
+    // TODO remove this
+    uint16_t magic_packet_length = {};
 }__ALIGNED__;
 
 

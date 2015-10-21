@@ -147,7 +147,7 @@ void parse_callback(NEO::Session* s)
       break;
       case 0x006b:       // connect char success
       {
-        s->rdata_dump();
+        //s->rdata_dump();
         auto net_head = reinterpret_cast<NEO::Packet_Head<0x006b>*>(s->rdata);
         int repeats_size = net_head->magic_packet_length - sizeof(NEO::Packet_Head<0x006b>);
         int repeat_size =  repeats_size / sizeof(NEO::Packet_Repeat<0x006b>);
@@ -156,8 +156,55 @@ void parse_callback(NEO::Session* s)
         for(int i=0;i<repeat_size;i++){ 
           auto& net_repeat = reinterpret_cast<NEO::Packet_Repeat<0x006b>&>(s->rdata[0]); 
           NEO::CharSelect char_select = net_repeat.char_select;
-          s->remove_rdata(sizeof(NEO::Packet_Repeat<0x006b>));      
+          
+          printf("CharId:0x%x\n",char_select.char_id.unwrap<NEO::CharId>(char_select.char_id));
+          printf("base_exp:%d\n",net_repeat.char_select.base_exp);
+          printf("zeny: %d\n", net_repeat.char_select.zeny);
+          printf("job_exp: %d\n", net_repeat.char_select.job_exp);
+          printf("job_level: %d\n", net_repeat.char_select.job_level);
+          printf("shoes:0x%x\n",char_select.shoes.unwrap<NEO::ItemNameId>(char_select.shoes));
+          printf("gloves:0x%x\n",char_select.gloves.unwrap<NEO::ItemNameId>(char_select.gloves));
+          printf("cape:0x%x\n",char_select.cape.unwrap<NEO::ItemNameId>(char_select.cape));
+          printf("misc1:0x%x\n",char_select.misc1.unwrap<NEO::ItemNameId>(char_select.misc1));
+          printf("option:0x%x\n",char_select.option);
+          printf("unused:0x%x\n",char_select.unused);
+          printf("karma:0x%x\n",char_select.karma);
+          printf("manner:0x%x\n",char_select.manner);
+          printf("hp:%d\n",char_select.hp);
+          printf("max_hp:%d\n",char_select.max_hp);
+          printf("sp:%d\n",char_select.sp);
+          printf("max_sp:%d\n",char_select.max_sp);
+          printf("speed:%d\n",char_select.speed);
+          printf("species:0x%x\n",char_select.misc1.unwrap<NEO::Species>(char_select.species));
+          printf("hair_style:%d\n",char_select.hair_style);
+         printf("weapon:%d\n",char_select.weapon);
+         printf("base_level:%d\n",char_select.base_level);
+         printf("skill_point:%d\n",char_select.skill_point);
+         printf("head_bottom:%d\n",char_select.head_bottom.unwrap<NEO::ItemNameId>(char_select.head_bottom));
+         printf("shield:%d\n",char_select.shield.unwrap<NEO::ItemNameId>(char_select.head_bottom));
+         printf("head_top:%d\n",char_select.head_top.unwrap<NEO::ItemNameId>(char_select.head_top));
+         printf("head_mid:%d\n",char_select.head_mid.unwrap<NEO::ItemNameId>(char_select.head_mid));
+         printf("hair_color:%d\n",char_select.hair_color);     
+         printf("misc2:%d\n",char_select.misc2.unwrap<NEO::ItemNameId>(char_select.misc2));
+         printf("char_name: [%s]\n",char_select.char_name.to__actual().c_str());
+         printf("char_num:%d\n",char_select.char_num);     
+         printf("unused2:%d\n",char_select.unused2);     
+         printf("stats.str:%d\n",char_select.stats.str);
+         printf("stats.agi:%d\n",char_select.stats.agi);
+         printf("stats.vit:%d\n",char_select.stats.vit);
+         printf("stats.int_:%d\n",char_select.stats.int_);
+         printf("stats.dex:%d\n",char_select.stats.dex);
+         printf("stats.luk:%d\n",char_select.stats.luk);
+         printf("char_num:%d\n",char_select.char_num);
+         printf("stats.luk:%d\n",char_select.unused2);
+         s->remove_rdata(sizeof(NEO::Packet_Repeat<0x006b>));      
         }
+      }
+      case 0x8000:       // special hold notify
+      {
+        auto net_payload = reinterpret_cast<NEO::Packet_Payload<0x8000>*>(s->rdata);
+        s->remove_rdata(net_payload->magic_packet_length);  
+        break;   
       }
       default:
           printf("Got ID 0x%04X\n",s->peek_package_id());
