@@ -181,7 +181,7 @@ void parse_callback(NEO::Session* s)
          printf("base_level:%d\n",char_select.base_level);
          printf("skill_point:%d\n",char_select.skill_point);
          printf("head_bottom:%d\n",char_select.head_bottom.unwrap<NEO::ItemNameId>(char_select.head_bottom));
-         printf("shield:%d\n",char_select.shield.unwrap<NEO::ItemNameId>(char_select.head_bottom));
+         printf("shield:%d\n",char_select.shield.unwrap<NEO::ItemNameId>(char_select.shield));
          printf("head_top:%d\n",char_select.head_top.unwrap<NEO::ItemNameId>(char_select.head_top));
          printf("head_mid:%d\n",char_select.head_mid.unwrap<NEO::ItemNameId>(char_select.head_mid));
          printf("hair_color:%d\n",char_select.hair_color);     

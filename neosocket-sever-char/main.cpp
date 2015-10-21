@@ -181,64 +181,6 @@ int main(void)
   if (0){
           NEO::Session* s = (NEO::Session*)malloc(sizeof(NEO::Session));
           s->initSession();
-         // NEO::Packet_Fixed<0x007f> fixed_007f;
-         // printf("size is %d\n",sizeof(fixed_007f));
-          //send 0x0063 update host package
-          char update_url[] = "http://192.168.85.130/updates/";
-          std::vector< NEO::Packet_Repeat<0x0063> > repeat_0063;
-          for (int i=0;i<sizeof(update_url);i++){
-            NEO::Packet_Repeat<0x0063> rep_data;
-            rep_data.c = update_url[i];
-            repeat_0063.push_back(rep_data);
-          }
-          uint16_t len = (sizeof(NEO::Packet_Repeat<0x0063>)* repeat_0063.size())+ sizeof(NEO::Packet_Head<0x0063>);
-          NEO::Packet_Head<0x0063> head_0063;
-          head_0063.magic_packet_length = len;
-          send_to_buffer(s,head_0063, repeat_0063);
-          
-          //Send 0x0069
-          std::vector< NEO::Packet_Repeat<0x0069> > repeat_0069;
-          for (int i=0;i<1;i++){
-            NEO::Packet_Repeat<0x0069> rep_data;
-             rep_data.ip = NEO::IP4Address({127,0,0,1});
-             rep_data.port = 6122;
-             char servername[23] = "The Mana World";
-             auto tmp = reinterpret_cast<NEO::ServerName*>(servername);  
-             rep_data.server_name = *tmp;
-             rep_data.users = 0;
-             rep_data.maintenance = 0;
-             rep_data.is_new = 0;
-
-            repeat_0069.push_back(rep_data);
-          }
-          
-          len = (sizeof(NEO::Packet_Repeat<0x0069>)* repeat_0069.size())+ sizeof(NEO::Packet_Head<0x0069>);
-          NEO::Packet_Head<0x0069> head_0069;
-          head_0069.magic_packet_length = len; //0x004F
-          head_0069.login_id1 = 0xFA437098;
-          head_0069.account_id = NEO::AccountId(0x001E8480);
-          head_0069.login_id2 = 0xE34F5D87;
-          head_0069.unused = 0;
-          
-          //char t[] = {0x32, 0x30, 0x31 ,0x35 ,0x2D ,0x31 ,0x30 ,0x2D, 0x31, 0x36,0x20 ,0x31 ,0x38 ,0x3A ,0x30 ,0x37,0x3A ,0x31 ,0x38,0x2E,0x38, 0x34, 0x38};
-          char login_time[] = "2015-10-16 18:07:18.848";
-          auto tmp = reinterpret_cast<NEO::timestamp_milliseconds_buffer*>(login_time);
-          head_0069.last_login_string = *tmp;
-          head_0069.unused2 = 0;
-          head_0069.sex = NEO::SEX::MAN;
-          send_to_buffer(s,head_0069, repeat_0069);
-          NEO::Packet_Fixed<0x007f> fixed_007f;
-          fixed_007f.tick = 0x3412;
-          send_to_buffer(s,fixed_007f);
-        
-         // printf("size is %d\n",sizeof(fixed_007f));
-          
-          //
-          //send_to_buffer(s,head_0069, repeat_0069);
-          
-           s->wdata_dump();
-         // printf("%d\n",sizeof(NEO::time_point));
-
     }else{
   neos.makelisten(6122, connection_callback);
   for( ; ; ) {
