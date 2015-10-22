@@ -31,9 +31,11 @@ NEO::Version CURRENT_LOGIN_SERVER_VERSION =
 //
 
 NEO::Packet_Fixed<0x0065> connect_char_fixed_0065;
-            
+NEO::Packet_Fixed<0x0072> connect_map_fixed_0072;
+
 NEO::Socket login_client;
 NEO::Socket char_client;
+NEO::Socket map_client;
 
 template<int id>
 void send_to_buffer(NEO::Session* s, NEO::Packet_Fixed<id> fixed)
@@ -63,6 +65,14 @@ void char_connection_callback(NEO::Session* s)
  // NEO::Packet_Fixed<0x7530> fixed_7530;
   send_to_buffer(s,connect_char_fixed_0065);
   //s->
+}
+
+void map_connection_callback(NEO::Session* s)
+{
+ printf("map_connection_callback occur, fd=%d\n",s->GetFD());
+  s->SetRecvFunc(recv_callback);
+  s->SetParseFunc(parse_callback);
+  send_to_buffer(s,connect_map_fixed_0072);
 }
 
 
@@ -141,7 +151,7 @@ void parse_callback(NEO::Session* s)
         }       
         //Create 0x0065 packet
         connect_char_fixed_0065.packet_client_version = 0x5;
-        s->wdata_dump();
+        //s->wdata_dump();
         char_client.makeclient(char_ip,char_port, 3, char_connection_callback);
       }
       break;
@@ -156,7 +166,6 @@ void parse_callback(NEO::Session* s)
         for(int i=0;i<repeat_size;i++){ 
           auto& net_repeat = reinterpret_cast<NEO::Packet_Repeat<0x006b>&>(s->rdata[0]); 
           NEO::CharSelect char_select = net_repeat.char_select;
-          
           printf("CharId:0x%x\n",char_select.char_id.unwrap<NEO::CharId>(char_select.char_id));
           printf("base_exp:%d\n",net_repeat.char_select.base_exp);
           printf("zeny: %d\n", net_repeat.char_select.zeny);
@@ -197,7 +206,13 @@ void parse_callback(NEO::Session* s)
          printf("stats.luk:%d\n",char_select.stats.luk);
          printf("char_num:%d\n",char_select.char_num);
          printf("stats.luk:%d\n",char_select.unused2);
-         s->remove_rdata(sizeof(NEO::Packet_Repeat<0x006b>));      
+         s->remove_rdata(sizeof(NEO::Packet_Repeat<0x006b>));  
+         //Got char info. Then, choice one char
+         //Send 0x0066 to choice one char    
+         NEO::Packet_Fixed<0x0066> fixed_0066;
+         //choice first char
+         fixed_0066.code = 0;
+         send_to_buffer(s,fixed_0066);
         }
       }
       case 0x8000:       // special hold notify
@@ -206,6 +221,27 @@ void parse_callback(NEO::Session* s)
         s->remove_rdata(net_payload->magic_packet_length);  
         break;   
       }
+      case 0x0071:    // Map server info
+        {
+          auto net_fixed = reinterpret_cast<NEO::Packet_Fixed<0x0071>*>(s->rdata);
+          
+          //Send 0073
+          //s->wdata_dump();
+          char map_ip[16];
+          sprintf(map_ip,"%d.%d.%d.%d",net_fixed->ip._addr[0],net_fixed->ip._addr[1],net_fixed->ip._addr[2],net_fixed->ip._addr[3]);
+          int map_port = net_fixed->port;
+          printf("Got map server[%s:%d]\n",map_ip,map_port);
+          printf("server name[%s]\n",net_fixed->map_name.c_str());
+          //Create package connect_map_fixed_0072
+          connect_map_fixed_0072.account_id = NEO::AccountId(0x001E8480);
+          connect_map_fixed_0072.char_id = connect_map_fixed_0072.char_id.wrap<NEO::CharId>(0x249f3);
+          connect_map_fixed_0072.login_id1 = 0xfa437098;
+          connect_map_fixed_0072.client_tick = 0xe34f5d87;
+          connect_map_fixed_0072.sex = NEO::SEX::MAN;
+          map_client.makeclient(map_ip,map_port, 3, map_connection_callback);
+          s->remove_rdata(sizeof(NEO::Packet_Fixed<0x0071>));
+        }
+        break;
       default:
           printf("Got ID 0x%04X\n",s->peek_package_id());
            s->clean_rdata();
@@ -248,6 +284,10 @@ int main(void)
     if (char_client.connect_fd > 0){
       char_client.do_client_event(3);
       char_client.do_parse_package();
+    }
+    if (map_client.connect_fd > 0){
+      map_client.do_client_event(3);
+      map_client.do_parse_package();
     }
   
   }

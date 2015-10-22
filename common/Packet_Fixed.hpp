@@ -261,6 +261,60 @@ struct Packet_Payload<0x8000>
     uint16_t magic_packet_length = {};
 }__ALIGNED__;
 
+// Packet 0x0066: "select character"
+// define: CMSG_CHAR_SELECT
+// pre:  packet 0x006b
+// post: FINISH, packet 0x0071, packet 0x0081
+// Choose a character to enter the map.
+//
+template<>
+struct Packet_Fixed<0x0066>
+{
+    static const uint16_t PACKET_ID = 0x0066;
+    // TODO remove this
+    uint16_t magic_packet_id = PACKET_ID;
+    uint8_t code = {};
+}__ALIGNED__;
+
+// Packet 0x0071: "select character success"
+// define: SMSG_CHAR_MAP_INFO
+// pre:  packet 0x0066
+// post: packet 0x0072
+// Return character location and map server IP.
+//
+template<>
+struct Packet_Fixed<0x0071>
+{
+    static const uint16_t PACKET_ID = 0x0071;
+
+    // TODO remove this
+    uint16_t magic_packet_id = PACKET_ID;
+    CharId char_id = {};
+    MapName map_name = {};
+    IP4Address ip = {};
+    uint16_t port = {};
+}__ALIGNED__;
+
+// Packet 0x0072: "connect map"
+// define: CMSG_MAP_SERVER_CONNECT
+// pre:  packet 0x0071, packet 0x0092
+// post: packet 0x0081, packet 0x2afc
+// Begin connection to the map server, based on keys the login
+// server gave us.
+//
+template<>
+struct Packet_Fixed<0x0072>
+{
+    static const uint16_t PACKET_ID = 0x0072;
+
+    // TODO remove this
+    uint16_t magic_packet_id = PACKET_ID;
+    AccountId account_id = {};
+    CharId char_id = {};
+    uint32_t login_id1 = {};
+    uint32_t client_tick = {};
+    SEX sex = {};
+}__ALIGNED__;
 
 /*
 template<>

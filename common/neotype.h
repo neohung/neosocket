@@ -275,6 +275,15 @@ struct CharSelect
 };
 
 
+class MapName
+{
+    VString<15> _impl;
+public:
+    MapName() = default;
+    MapName(VString<15> v) : _impl(v){};
+    const char *c_str() const { return _impl.c_str(); }
+};
+
 
 class milli_clock
 {
