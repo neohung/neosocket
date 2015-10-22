@@ -316,6 +316,23 @@ struct Packet_Fixed<0x0072>
     SEX sex = {};
 }__ALIGNED__;
 
+
+// Packet 0x0081: "connect foo error"
+// define: SMSG_CONNECTION_PROBLEM
+// pre:  FINISH, GM, MAGIC, SCRIPT, TIMER, packet 0x0064, packet 0x0066, packet 0x0072, packet 0x007d, packet 0x0085, packet 0x0089, packet 0x008c, packet 0x009f, packet 0x00a2, packet 0x00a7, packet 0x00a9, packet 0x00ab, packet 0x00b2, packet 0x00b8, packet 0x00b9, packet 0x00bb, packet 0x00c8, packet 0x00c9, packet 0x00e4, packet 0x00e6, packet 0x00e8, packet 0x00eb, packet 0x00ed, packet 0x00ef, packet 0x00f3, packet 0x00f5, packet 0x00f7, packet 0x0112, packet 0x0143, packet 0x0146, packet 0x01d5, packet 0x2afd, packet 0x2afe, packet 0x2b06, packet 0x2b0d
+// post: PRETTY
+// Failed to connect to some server (multiple meanings).
+//
+template<>
+struct Packet_Fixed<0x0081>
+{
+    static const uint16_t PACKET_ID = 0x0081;
+
+    // TODO remove this
+    uint16_t magic_packet_id = PACKET_ID;
+    uint8_t error_code = {};
+}__ALIGNED__;
+
 /*
 template<>
 struct NetPacket_Head<0x0069>

@@ -15,6 +15,7 @@
 
 #include "socket.hpp"
 
+#include <time.h>
 //
 #define VERSION_MAJOR 15
 #define VERSION_MINOR 10
@@ -36,6 +37,12 @@ NEO::Packet_Fixed<0x0072> connect_map_fixed_0072;
 NEO::Socket login_client;
 NEO::Socket char_client;
 NEO::Socket map_client;
+
+void delay(unsigned int mseconds)
+{
+    clock_t goal = mseconds + clock();
+    while (goal > clock());
+}
 
 template<int id>
 void send_to_buffer(NEO::Session* s, NEO::Packet_Fixed<id> fixed)
@@ -218,7 +225,9 @@ void parse_callback(NEO::Session* s)
       case 0x8000:       // special hold notify
       {
         auto net_payload = reinterpret_cast<NEO::Packet_Payload<0x8000>*>(s->rdata);
-        s->remove_rdata(net_payload->magic_packet_length);  
+        printf("Got 0x8000 len=%d\n", net_payload->magic_packet_length);
+        s->remove_rdata(net_payload->magic_packet_length); 
+        delay(1000); 
         break;   
       }
       case 0x0071:    // Map server info
@@ -242,9 +251,19 @@ void parse_callback(NEO::Session* s)
           s->remove_rdata(sizeof(NEO::Packet_Fixed<0x0071>));
         }
         break;
+      case 0x0081:
+      {
+        s->rdata_dump();
+        printf("Got ID 0x%04X\n",s->peek_package_id());
+        auto net_fixed = reinterpret_cast<NEO::Packet_Fixed<0x0081>*>(s->rdata);
+        printf("Connect problem occur and error code: %d\n",net_fixed->error_code);
+        s->clean_rdata();
+      }
+      break;
       default:
+          s->rdata_dump();
           printf("Got ID 0x%04X\n",s->peek_package_id());
-           s->clean_rdata();
+          s->clean_rdata();
       break;
     }
   }
@@ -274,6 +293,11 @@ void login_connection_callback(NEO::Session* s)
 
 int main(void)
 {
+  if(0){
+    printf("1\n");
+    delay(1000); 
+     printf("2\n");
+  }else{
   login_client.makeclient("192.168.85.130",6901, 3, login_connection_callback);
   //login_client.makeclient("127.0.0.1",1234, 3, login_connection_callback);
   //printf("Wait connection.\n");
@@ -290,6 +314,7 @@ int main(void)
       map_client.do_parse_package();
     }
   
+  }
   }
   exit(0);
 }
