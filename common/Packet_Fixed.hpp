@@ -333,6 +333,48 @@ struct Packet_Fixed<0x0081>
     uint8_t error_code = {};
 }__ALIGNED__;
 
+// Packet 0x2712: "account auth"
+// pre:  packet 0x0065
+// post: packet 0x2713, packet 0x2729
+// Check whether client's cookies are okay.
+//
+template<>
+struct Packet_Fixed<0x2712>
+{
+    static const uint16_t PACKET_ID = 0x2712;
+
+    // TODO remove this
+    uint16_t magic_packet_id = PACKET_ID;
+    AccountId account_id = {};
+    uint32_t login_id1 = {};
+    uint32_t login_id2 = {};
+    SEX sex = {};
+    IP4Address ip = {};
+};
+
+// Packet 0x2713: "account auth result"
+// pre:  packet 0x2712
+// post: packet 0x006b, packet 0x006c
+// Send account auth status to tmwa-char.
+//
+// Status:
+//     0: good
+//     1: bad
+//
+template<>
+struct Packet_Fixed<0x2713>
+{
+    static const uint16_t PACKET_ID = 0x2713;
+
+    // TODO remove this
+    uint16_t magic_packet_id = PACKET_ID;
+    AccountId account_id = {};
+    uint8_t invalid = {};
+    //AccountEmail email = {};
+    //TimeT unused_connect_until = {};
+};
+
+
 /*
 template<>
 struct NetPacket_Head<0x0069>
